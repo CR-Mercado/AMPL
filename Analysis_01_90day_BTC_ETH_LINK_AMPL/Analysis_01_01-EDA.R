@@ -74,21 +74,35 @@ lapply(my_coins, function(x){
 #' Curious about both general correlation in the last 2,100+ hours 
 #' and rolling 24 hour correlations. 
 
+get_correlation_tbl <- function(my_coins, index_range = NULL){ 
+# gets the correlation table for a particular index range
+
 correlation_tbl <- data.frame(coin1 = character(),
                               coin2 = character(),
                               correlation = numeric())
 
+if( is.null(index_range) | 
+    !(class(index_range) %in% c("numeric","integer")) ){
+  index_range <- 1:nrow(my_coins[[1]])
+}
+
 for(i in names(my_coins)){ 
   for(j in names(my_coins)){
+    x = my_coins[[i]]
+    y = my_coins[[j]]
     correlation_tbl <- rbind(correlation_tbl, 
                              data.frame(coin1 = i,
                                         coin2 = j,
                                         correlation = 
-                                          cor(my_coins[[i]]$Market_Cap,
-                                              my_coins[[j]]$Market_Cap))
+                                          cor(
+                          x$Market_Cap[index_range],
+                          y$Market_Cap[index_range]))
                              ) 
     }
-  }
+}
+
+return(correlation_tbl)
+}
 
 get_correlation_plot <- function(correlation_tbl){ 
 
@@ -107,9 +121,39 @@ correlation_plot$labels$colour <- NULL
 
 return(correlation_plot)
 } 
-get_correlation_plot(correlation_tbl)
+
+general_correlation_tbl <- get_correlation_tbl(my_coins)
+
+get_correlation_plot(general_correlation_tbl)
 
 
+# Go along a series of indexes to get a rolling correlation.
+
+select_sequence <- list()
+for(i in 1:(min_row-24)){ 
+  select_sequence[[i]] <- i:(i+24)  
+}
+
+rolling_correlations <- lapply(select_sequence, 
+                               FUN = function(x){ 
+                                 get_correlation_tbl(my_coins, 
+                                                         index_range = x)
+                                 })
+
+
+get_rolling_coin_corrs <- function(rolling_correlations, coin1, coin2){ 
+  # outputs the numeric rolling correlations 
+  
+  unlist ( lapply(rolling_correlations, FUN = function(x){ 
+    x[x$coin1 == coin1 & x$coin2 == coin2, "correlation"]
+    })
+  ) 
+  
+  }
+
+ampl_btc_rolling_corrs <- get_rolling_coin_corrs(rolling_correlations,
+                                                 "ampleforth",
+                                                 "bitcoin")
 
 
 

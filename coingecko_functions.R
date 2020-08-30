@@ -84,8 +84,8 @@ get_coin_N_days_daily_lvl <- function(coin_id, N){
 #' At their specified levels; 
 #' All time is in milliseconds since Jan 1 1970 (I think ... LOL)
 btc_min <- get_coin_1_day_minute_lvl("bitcoin")
-btc_hour <- get_coin_N_day_hour_lvl("bitcoin",N = 50)
-btc_daily <- get_coin_N_days_daily_lvl("bitcoin", N = 100)
+btc_hour <- get_coin_N_day_hour_lvl("bitcoin",N = 90)
+btc_daily <- get_coin_N_days_daily_lvl("bitcoin", N = 365)
 
 
 # Converting JSON to Data Frame ---- 
@@ -118,5 +118,6 @@ btc_min_tbl <- convert_coin_data(btc_min)
 btc_hour_tbl <- convert_coin_data(btc_hour)
 btc_daily_tbl <- convert_coin_data(btc_daily)
 
+# For cleaner sourcing 
+rm(btc_min,btc_hour,btc_daily,btc_daily_tbl,btc_hour_tbl,btc_min_tbl)
 
-# Creating a singular function to capture 

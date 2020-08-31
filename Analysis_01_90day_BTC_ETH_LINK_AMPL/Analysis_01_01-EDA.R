@@ -2,6 +2,8 @@
 
 library(lubridate)
 library(ggplot2)
+library(gtools)
+
 
 # Step 01 Data Load ---- 
 
@@ -151,14 +153,42 @@ get_rolling_coin_corrs <- function(rolling_correlations, coin1, coin2){
   
   }
 
-ampl_btc_rolling_corrs <- get_rolling_coin_corrs(rolling_correlations,
-                                                 "ampleforth",
-                                                 "bitcoin")
+comparisons_list <- combinations(n = 4, r = 2, 
+                                 repeats.allowed = FALSE,
+                                 v = names(my_coins))
+
+par(mfrow = c(2,3))
+for(i in 1:nrow(comparisons_list)){ 
+    plot( 
+      get_rolling_coin_corrs(rolling_correlations,
+                             coin1 = comparisons_list[i, 1],
+                             coin2 = comparisons_list[i, 2]), 
+      type = "l",ylim = c(-1,1), xlim = c(1,min_row),
+      main = paste0("Rolling Correlation: ",
+                    comparisons_list[i,1],
+                    " vs. ",
+                    comparisons_list[i,2]),
+      xlab = "Rolling Period",
+      ylab = "Correlation"
+      )
+    }
+par(mfrow = c(1,1))
 
 
+# Step 05 H-D Modeling ----
 
+#' Developing a preliminary 12/6 H-D Model for AMPL 
+#' the idea is by cutting the market cap series into D-hour moving windows
+#' can H hours of data predict the price D hours later. 
+#' i.e. for {H,D} = {12,6} can 12am-12pm predict 6PM; can 6am-6pm predict 12am. 
+#' Note: Decision points are every 6 hours to allow for stabilization. 
+#' The goal is to identify a historical window {H} to Decision {D} ratio 
+#' that might perform profitably in terms of avoiding losses.
 
-
+generate_H_D <- function(coin_cap, History, Decision){ 
+  
+  
+  }
 
 
 

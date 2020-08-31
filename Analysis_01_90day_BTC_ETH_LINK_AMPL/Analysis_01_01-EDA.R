@@ -175,7 +175,7 @@ for(i in 1:nrow(comparisons_list)){
 par(mfrow = c(1,1))
 
 
-# Step 05 H-D Modeling ----
+# Step 04 H-D Feature Engineering ----
 
 #' Developing a preliminary 12/6 H-D Model for AMPL 
 #' the idea is by cutting the market cap series into D-hour moving windows
@@ -185,10 +185,55 @@ par(mfrow = c(1,1))
 #' The goal is to identify a historical window {H} to Decision {D} ratio 
 #' that might perform profitably in terms of avoiding losses.
 
-generate_H_D <- function(coin_cap, History, Decision){ 
-  
-  
+generate_H_D <- function(coin_market_cap, History_ = 12, Decision_ = 6){ 
+  #' creates a data frame of the form: 
+  #'   History = character vector of length History (i.e. 6 numbers in 1 column)
+  #'   Decision = numeric vector of length 1 containing the market cap value
+  #'   Predicted = predicted value  
+  #'   D hours ahead of the History hours. 
+  #'   Example:   c(2,3,4,1,5,2,4,3,6,5,8,6) | 4 
+  #'   The idea being that we want to assess if the series 
+  #'   can be predicted of the decision point ahead.  
+
+history_range_index <- which(1:length(coin_market_cap) %% Decision_ == 0)
+history_range <- lapply(history_range_index, FUN = function(x){
+  (x - History_):x
+})
+decision_index <- lapply(history_range, FUN = function(x){ 
+  max(x) + Decision_
+  })
+
+market_cap_slices <- list()
+length(market_cap_slices) <- length(history_range)
+
+for(i in 1:length(history_range)){ 
+  market_cap_slices[[i]] <- list(c(history_range[[i]]),
+                                 decision_index[[i]])
   }
+
+# Burn in 2 to get through negatives and enough history. 
+# The last 1-2 may also be NAs due to exceeding data availability. 
+market_cap_values <- lapply(market_cap_slices, FUN = function(x){
+  if( mean( (x[[1]][[1]] < History_)  > 0 ) ) { 
+    NULL
+  } else { 
+  list( 
+    c(coin_market_cap[ x[[1]] ]), 
+    coin_market_cap [ x[[2]] ]
+    )
+  }
+  })
+
+
+return(market_cap_values)
+
+}
+
+ampl_mc_data <- generate_H_D(my_coins$ampleforth$Market_Cap)
+
+# Going to make this into a binary classification problem. 
+# Is the decision point hour market cap higher than the most recent hour's 
+# market cap?  (i.e. is 6PM higher than 12pm?) 
 
 
 
